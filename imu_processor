@@ -1,0 +1,99 @@
+import json
+import sys
+import re
+import numpy as np
+from pathlib import Path
+import matplotlib.pyplot as plt
+import pandas as pd
+# Add src/ to Python's search path, regardless of where this script is run from
+sys.path.append(str(Path(__file__).parent / "src"))
+from load_movesense_data import load_movesense_json, merge_acc_gyro, synchronize_devices, plot_qc, process_trial_folder
+from IMU_filters import OrientationEKF, calibrate_from_static_trial, run_ekf_on_device, relative_knee_angle
+from scipy.spatial.transform import Rotation
+
+# Load and merge each device's own accel + gyro 
+DEVICE_LABELS = {
+    "233830000601": "under_k", # IMU on lower leg, under knee
+    "233830000617": "above_k", # IMU on upper leg, above knee
+    "233830000625": "ankle", # IMU on ankle or foot
+}
+
+# select exercise trial to process
+full_trial_df = process_trial_folder("data/raw/singleleg_jump_20260917", DEVICE_LABELS, show_qc_plots=True) #Change path per data run!!!
+# Calibrate from the static standing trial
+calib_df = process_trial_folder("data/raw/stand_20260917", DEVICE_LABELS) #Change path per data run!!!
+
+# under knee calibration
+under_k_bias, under_k_q_calib = calibrate_from_static_trial(calib_df, "under_k") 
+under_k_quats, under_k_eulers, tt = run_ekf_on_device(full_trial_df, "under_k", under_k_bias, under_k_q_calib, show_plot=True)
+
+# above knee calibration
+above_k_bias, above_k_q_calib = calibrate_from_static_trial(calib_df, "above_k")
+above_k_quats, above_k_eulers, _ = run_ekf_on_device(full_trial_df, "above_k", above_k_bias, above_k_q_calib)
+
+# ankle calibration
+# ankle_bias, ankle_q_calib = calibrate_from_static_trial(calib_df, "ankle")
+# ankle_quats, ankle_eulers, _ = run_ekf_on_device(full_trial_df, "ankle", ankle_bias, ankle_q_calib)
+
+# Get calibration-period knee angles (needed for Eq 6 zeroing)
+# Run the same EKF on the STATIC calibration trial itself, not just the exercise trial
+calib_under_k_quats, _, _ = run_ekf_on_device(calib_df, "under_k", under_k_bias, under_k_q_calib, show_plot=False)
+calib_above_k_quats, _, _ = run_ekf_on_device(calib_df, "above_k", above_k_bias, above_k_q_calib, show_plot=False)
+
+calib_knee_angles = np.array([
+    relative_knee_angle(qt, qs)
+    for qt, qs in zip(calib_above_k_quats, calib_under_k_quats)
+])
+knee_angle_offset = calib_knee_angles.mean(axis=0)
+
+# Compute knee angle for the actual trial (thigh = above_k, shank = under_k)
+knee_angles = np.array([
+    relative_knee_angle(qt, qs)
+    for qt, qs in zip(above_k_quats, under_k_quats)
+])
+knee_angles_zeroed = knee_angles - knee_angle_offset  # Eq 6
+knee_angles_zeroed[:, 0] = np.unwrap(knee_angles_zeroed[:, 0], period=360)
+knee_angles_zeroed[:, 1] = np.unwrap(knee_angles_zeroed[:, 1], period=360)
+knee_angles_zeroed[:, 2] = np.unwrap(knee_angles_zeroed[:, 2], period=360)
+
+
+# Plot
+fig, ax = plt.subplots(figsize=(10, 5))
+ax.plot(tt, knee_angles_zeroed[:, 0], label="IE (int/ext rotation)")
+ax.plot(tt, knee_angles_zeroed[:, 1], label="AA (abduction/adduction)")
+ax.plot(tt, knee_angles_zeroed[:, 2], label="FE (flexion/extension)")
+ax.axhline(0, color="gray", linewidth=0.5, linestyle="--")
+ax.legend()
+ax.set_xlabel("time (s)")
+ax.set_ylabel("deg")
+ax.set_title("Knee angle - single leg jump trial")
+plt.show()
+
+"""
+from last run, pre filter addition - fit back in later, want to see step by step data processing and filtering eventually
+full_trial_df = process_trial_folder("data/raw/singleleg_jump_1_20260904", DEVICE_LABELS, show_qc_plots=True)
+print(full_trial_df.head())
+print(f"Full trial shape: {full_trial_df.shape}")
+full_trial_df.to_csv("data/processed/singleleg_jump_1_20260904_full_3imu.csv", index=False)
+"""
+
+
+
+''' 
+COPIED:
+# calib_df and trial_df must be from the SAME recording session
+angle_offset = np.array([relative_knee_angle(qt, qs)
+                          for qt, qs in zip(calib_thigh_quats, calib_shank_quats)]).mean(axis=0)
+
+knee_angles = np.array([relative_knee_angle(qt, qs)
+                         for qt, qs in zip(thigh_quats, shank_quats)])
+knee_angles_zeroed = knee_angles - angle_offset  # Eq 6
+
+fig, ax = plt.subplots(figsize=(10, 5))
+ax.plot(tt, knee_angles_zeroed[:, 0], label="IE (int/ext rotation)")
+ax.plot(tt, knee_angles_zeroed[:, 1], label="AA (abduction/adduction)")
+ax.plot(tt, knee_angles_zeroed[:, 2], label="FE (flexion/extension)")
+ax.legend(); ax.set_xlabel("time (s)"); ax.set_ylabel("deg")
+plt.show()
+
+'''
