@@ -2,10 +2,13 @@
 KTH technology and health project course. IMUs measuring knee angle to validate method for correlating to ACL injury risk in a more accessible way.
 
 Files:
+
 imu_processor - main, runs data analysis
+
 /src folder/
 - IMU_filters - has all classes and functions related to the extended kalman filter (EKF) and calculating knee angles
 - load_movesense_data - has all functions related to loading raw data from Movesense IMUs
+
 /data folder/ - has raw data that can be used in imu_processor, user must point processor at raw exercise data it wants to analyze
 
 What code does:
