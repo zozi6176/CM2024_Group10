@@ -19,7 +19,7 @@ DEVICE_LABELS = {
 }
 
 # Session settings: change per session
-SESSION = "wmag_20261002"
+SESSION = "left_20261002"
 CALIB_FOLDER = f"data/raw/stand_{SESSION}"
 AXIS_REFERENCE_FOLDER = f"data/raw/lunge_{SESSION}"   # hinge axis estimated from this trial
 TRIAL_FOLDER = f"data/raw/lunge_{SESSION}"   # the exercise to process
@@ -92,9 +92,9 @@ ankle_bias, ankle_q_calib = calibrate_from_static_trial(calib_df, "ankle")
 '''
 calibs = calibrate_folder("data/raw/mag_cal", "data/processed/mag_calibration")
 static_files = {
-    "233830000601": r"C:\Dev\imu_project\data\raw\stand_wmag_20261002\20261002T081416Z_233830000601_magn_stream.json",
-    "233830000617": r"C:\Dev\imu_project\data\raw\stand_wmag_20261002\20261002T081416Z_233830000617_magn_stream.json",
-    "233830000625": r"C:\Dev\imu_project\data\raw\stand_wmag_20261002\20261002T081416Z_233830000625_magn_stream.json",
+    "233830000601": r"C:\Dev\imu_project\data\raw\stand_left_20261002\20261002T081416Z_233830000601_magn_stream.json",
+    "233830000617": r"C:\Dev\imu_project\data\raw\stand_left_20261002\20261002T081416Z_233830000617_magn_stream.json",
+    "233830000625": r"C:\Dev\imu_project\data\raw\stand_left_20261002\20261002T081416Z_233830000625_magn_stream.json",
 }
 for dev_id, path in static_files.items():
     print(f"--- static check: {dev_id} ---")
