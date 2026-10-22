@@ -3,10 +3,13 @@ KTH technology and health project course. IMUs measuring knee angle to validate 
 
 Files:
 /data folder/ - has raw data that can be used in imu_processor, user must point processor at raw exercise data it wants to analyze
+  
   /raw/ - raw exercise data, labeled with exercise and date of data collection
 
 /imu_pipeline folder/ - has all code files relevant to running IMU data processor  
+  
   imu_processor - main, runs data analysis, user must point code at specific exercise file to process and at specific standing calibration file
+  
   /src folder/
     - IMU_filters - has all classes and functions related to the extended kalman filter (EKF) and calculating knee angles
     - load_movesense_data - has all functions related to loading raw data from Movesense IMUs
@@ -14,6 +17,7 @@ Files:
           - at the bottom of imu_processor, there is commented code that will show you the progress we made on this calibration
 
 VideoAnalysis.ipynb - code used to analyze videos of the exercises, Sport2D
+
 IMUproject - initial code used to understand loading json files, not used in main analysis but used as resource
 
 What code does:
