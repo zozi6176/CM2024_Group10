@@ -1,15 +1,20 @@
-# CM2024_Group10
+# CM2024_Group10 - IMU ACL Measurement
 KTH technology and health project course. IMUs measuring knee angle to validate method for correlating to ACL injury risk in a more accessible way.
 
 Files:
-
-imu_processor - main, runs data analysis
-
-/src folder/
-- IMU_filters - has all classes and functions related to the extended kalman filter (EKF) and calculating knee angles
-- load_movesense_data - has all functions related to loading raw data from Movesense IMUs
-
 /data folder/ - has raw data that can be used in imu_processor, user must point processor at raw exercise data it wants to analyze
+  /raw/ - raw exercise data, labeled with exercise and date of data collection
+
+/imu_pipeline folder/ - has all code files relevant to running IMU data processor  
+  imu_processor - main, runs data analysis, user must point code at specific exercise file to process and at specific standing calibration file
+  /src folder/
+    - IMU_filters - has all classes and functions related to the extended kalman filter (EKF) and calculating knee angles
+    - load_movesense_data - has all functions related to loading raw data from Movesense IMUs
+    - mag_calibration - has all functions related to calibrating IMU magnetometer, did not have time to fully implement this in project
+          - at the bottom of imu_processor, there is commented code that will show you the progress we made on this calibration
+
+VideoAnalysis.ipynb - code used to analyze videos of the exercises, Sport2D
+IMUproject - initial code used to understand loading json files, not used in main analysis but used as resource
 
 What code does:
 [1] The raw data from each sensor (Movesense) needed to be re-packaged, merging the accelerometer and gyroscope data files to align to one common time grid.
